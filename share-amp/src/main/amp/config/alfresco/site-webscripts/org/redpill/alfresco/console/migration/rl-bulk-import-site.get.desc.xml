@@ -1,0 +1,6 @@
+<webscript>
+  <shortname>Admin Console Site Bulk Import Tool</shortname>
+  <description>Admin Console - Import sites</description>
+  <url>/components/console/rl-bulk-import-site</url>
+  <family>admin-console</family>
+</webscript>

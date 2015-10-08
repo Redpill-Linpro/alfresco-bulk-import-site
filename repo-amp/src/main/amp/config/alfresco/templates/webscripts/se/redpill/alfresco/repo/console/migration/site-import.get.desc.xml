@@ -1,0 +1,9 @@
+<webscript>
+  <shortname>Get all site bulk import candidates</shortname>
+  <description>Get all site bulk import candidates</description>
+  <url>/redpill/bulkimporttool/sites</url>
+  <format default="json">argument</format>
+  <authentication>admin</authentication>
+  <transaction>required</transaction>
+  <family>Bulk Site Import Tool</family>
+</webscript>

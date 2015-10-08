@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <entry key="type">st:site</entry>
+  <entry key="title">Test Site With Metadata</entry>
+  <entry key="site-preset">site-dashboard</entry>
+  <entry key="description">Description</entry>
+  <entry key="visibility">PUBLIC</entry>
+  <entry key="membership-site-manager">manager</entry>
+  <entry key="membership-site-collaborator">collaborator</entry>
+  <entry key="membership-site-contributer">contributer</entry>
+  <entry key="membership-site-consumer">consumer</entry>
+</properties>
