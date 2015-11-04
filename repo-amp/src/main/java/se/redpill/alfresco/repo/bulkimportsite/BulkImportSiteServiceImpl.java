@@ -151,8 +151,14 @@ public class BulkImportSiteServiceImpl implements InitializingBean, BulkImportSi
         }
 
         if (siteInfo == null) {
-          Map<String, String> cookies = shareConnector.createSite(place);
-          siteInfo = siteService.getSite(place.getShortName());
+          final Map<String, String> cookies = shareConnector.createSite(place);
+          siteInfo = transactionHelper.doInTransaction(new RetryingTransactionHelper.RetryingTransactionCallback<SiteInfo>() {
+            @Override
+            public SiteInfo execute() throws Throwable {
+              return siteService.getSite(place.getShortName());
+            }
+          }, true, true);
+
           final SiteInfo finalSiteInfo = siteInfo;
           if (siteInfo == null) {
             throw new AlfrescoRuntimeException("Could not create site with short name " + place.getShortName());
@@ -189,7 +195,14 @@ public class BulkImportSiteServiceImpl implements InitializingBean, BulkImportSi
               logger.error("Exception occured when importing documents into site. Deleting site");
               // DO NOT ADD ASPECT TEMPORARY TO SITES, IT WILL LEAVE STUFF
               // BEHIND SUCH AS SITE GROUPS
-              shareConnector.deleteShareSite(place, cookies);
+              transactionHelper.doInTransaction(new RetryingTransactionHelper.RetryingTransactionCallback<Void>() {
+                @Override
+                public Void execute() throws Throwable {
+                  shareConnector.deleteShareSite(place, cookies);
+                  return null;
+                }
+              }, true, true);
+
               throw new AlfrescoRuntimeException("Failed to bulk import documents into site " + siteInfo.getShortName(), e);
             }
           }

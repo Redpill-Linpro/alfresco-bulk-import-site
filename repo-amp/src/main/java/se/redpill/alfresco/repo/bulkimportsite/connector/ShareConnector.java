@@ -8,8 +8,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.alfresco.error.AlfrescoRuntimeException;
+import org.alfresco.repo.transaction.RetryingTransactionHelper;
 import org.alfresco.service.cmr.repository.NodeRef;
 import org.alfresco.service.cmr.security.AuthenticationService;
+import org.alfresco.service.cmr.site.SiteInfo;
 import org.alfresco.service.cmr.site.SiteService;
 import org.alfresco.service.namespace.NamespaceService;
 import org.apache.http.client.ClientProtocolException;
@@ -38,6 +40,8 @@ public class ShareConnector implements InitializingBean {
   AuthenticationService authenticationService;
   NamespaceService namespaceService;
   SiteService siteService;
+  RetryingTransactionHelper transactionHelper;
+  
   private String alfrescoUsername;
   private String alfrescoPassword;
   private String shareUrl;
@@ -61,7 +65,7 @@ public class ShareConnector implements InitializingBean {
     return cookies;
   }
 
-  public NodeRef createDocumentLibrary(Map<String, String> cookies, String shortName) {
+  public NodeRef createDocumentLibrary(Map<String, String> cookies, final String shortName) {
     String ticket = authenticationService.getCurrentTicket();
     RemoteClient remoteClient = new RemoteClient();
 
@@ -87,9 +91,13 @@ public class ShareConnector implements InitializingBean {
     if (response.getStatus().getCode() != 200) {
       throw new RuntimeException(response.toString());
     }
-
-    NodeRef documentLibrary = siteService.getContainer(shortName, SiteService.DOCUMENT_LIBRARY);
-    return documentLibrary;
+    
+    return transactionHelper.doInTransaction(new RetryingTransactionHelper.RetryingTransactionCallback<NodeRef>() {
+      @Override
+      public NodeRef execute() throws Throwable {
+        return siteService.getContainer(shortName, SiteService.DOCUMENT_LIBRARY);
+      }
+    }, true, true);
 
   }
 
@@ -238,8 +246,8 @@ public class ShareConnector implements InitializingBean {
     remoteClient.setRequestProperties(headers);
 
     try {
-      logger.trace("Touching "+shareUrl + "/service/modules/create-site");
-      Response response = remoteClient.call(shareUrl + "/service/modules/create-site");
+      logger.trace("Touching "+shareUrl + "/service/modules/create-site?htmlid=xxx");
+      Response response = remoteClient.call(shareUrl + "/service/modules/create-site?htmlid=xxx");
       if (response.getStatus().getCode() != 200) {
         throw new RuntimeException(response.toString());
       }
@@ -284,6 +292,10 @@ public class ShareConnector implements InitializingBean {
   public void setNamespaceService(NamespaceService namespaceService) {
     this.namespaceService = namespaceService;
   }
+  
+  public void setTransactionHelper(RetryingTransactionHelper transactionHelper) {
+    this.transactionHelper = transactionHelper;
+  }
 
   @Override
   public void afterPropertiesSet() throws Exception {
@@ -294,5 +306,6 @@ public class ShareConnector implements InitializingBean {
     Assert.notNull(siteService, "you must provide an instance of SiteService");
     Assert.notNull(authenticationService, "you must provide an instance of AuthenticationService");
     Assert.notNull(namespaceService, "you must provide an instance of NamespaceService");
+    Assert.notNull(transactionHelper, "you must provide an instance of RetryingTransactionHelper");
   }
 }

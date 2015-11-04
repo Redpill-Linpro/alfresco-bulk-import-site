@@ -20,6 +20,7 @@
     <property name="siteService" ref="SiteService" />
     <property name="authenticationService" ref="AuthenticationService" />
     <property name="namespaceService" ref="NamespaceService" />
+    <property name="transactionHelper" ref="retryingTransactionHelper" />
     <property name="shareUrl" value="${bulkimportsite.shareUrl}" />
     <property name="shareProtocol" value="${bulkimportsite.shareProtocol}" />
     <property name="alfrescoUsername" value="${bulkimportsite.alfresco.username}" />
