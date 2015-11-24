@@ -195,13 +195,8 @@ public class BulkImportSiteServiceImpl implements InitializingBean, BulkImportSi
               logger.error("Exception occured when importing documents into site. Deleting site");
               // DO NOT ADD ASPECT TEMPORARY TO SITES, IT WILL LEAVE STUFF
               // BEHIND SUCH AS SITE GROUPS
-              transactionHelper.doInTransaction(new RetryingTransactionHelper.RetryingTransactionCallback<Void>() {
-                @Override
-                public Void execute() throws Throwable {
-                  shareConnector.deleteShareSite(place, cookies);
-                  return null;
-                }
-              }, true, true);
+
+              shareConnector.deleteShareSite(place, cookies);
 
               throw new AlfrescoRuntimeException("Failed to bulk import documents into site " + siteInfo.getShortName(), e);
             }
@@ -259,7 +254,7 @@ public class BulkImportSiteServiceImpl implements InitializingBean, BulkImportSi
     users = place.getSiteContributers();
     addMembersWithRole(siteInfo.getShortName(), "SiteContributor", users);
     users = place.getSiteConsumers();
-    addMembersWithRole(siteInfo.getShortName(), "SiteConsumers", users);
+    addMembersWithRole(siteInfo.getShortName(), "SiteConsumer", users);
   }
 
   /**
