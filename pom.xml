@@ -13,7 +13,7 @@
 
   <groupId>org.redpill-linpro.alfresco.bulkimport</groupId>
   <artifactId>alfresco-bulk-import-site</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>1.0.0</version>
   <name>Bulk import tool for site structure</name>
   <description>Bulk import tool for site structure</description>
   <packaging>pom</packaging>
