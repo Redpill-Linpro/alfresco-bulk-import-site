@@ -61,6 +61,9 @@ public class BulkImportSiteServiceImpl implements InitializingBean, BulkImportSi
 
   private String importPath;
   private boolean skipEmptyStrings = false;
+  protected boolean replaceExisting = true;
+  protected int batchSize = 40;
+  protected int numThreads = 4;
   // for logging
   static int noOfFilesWritten = 0;
 
@@ -230,9 +233,9 @@ public class BulkImportSiteServiceImpl implements InitializingBean, BulkImportSi
     NodeImporter nodeImporter = streamingNodeImporterFactory.getNodeImporter(new File(documentsPath));
     BulkImportParameters bulkImportParameters = new BulkImportParameters();
     bulkImportParameters.setTarget(documentLibrary);
-    bulkImportParameters.setReplaceExisting(true);
-    bulkImportParameters.setBatchSize(40);
-    bulkImportParameters.setNumThreads(4);
+    bulkImportParameters.setReplaceExisting(replaceExisting);
+    bulkImportParameters.setBatchSize(batchSize);
+    bulkImportParameters.setNumThreads(numThreads);
     bulkFilesystemImporter.bulkImport(bulkImportParameters, nodeImporter);
 
   }
@@ -346,6 +349,18 @@ public class BulkImportSiteServiceImpl implements InitializingBean, BulkImportSi
     this.skipEmptyStrings = skipEmptyStrings;
   }
 
+  public void setNumThreads(int numThreads) {
+    this.numThreads = numThreads;
+  }
+  
+  public void setBatchSize(int batchSize) {
+    this.batchSize = batchSize;
+  }
+  
+  public void setReplaceExisting(boolean replaceExisting) {
+    this.replaceExisting = replaceExisting;
+  }
+  
   @Override
   public void afterPropertiesSet() throws Exception {
 
