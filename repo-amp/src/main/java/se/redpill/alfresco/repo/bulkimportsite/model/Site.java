@@ -36,6 +36,7 @@ public class Site implements Serializable {
       add("membership-site-manager");
       add("membership-site-collaborator");
       add("membership-site-contributer");
+      add("membership-site-contributor");
       add("membership-site-consumer");
 
     }
@@ -249,12 +250,15 @@ public class Site implements Serializable {
   }
 
   /**
-   * Get a list of site contributers
+   * Get a list of site contributors
    * 
    * @return
    */
-  public List<String> getSiteContributers() {
-    return getUsers("membership-site-contributer");
+  public List<String> getSiteContributors() {
+    //Check for both contributors and contributers due to early spelling mistake during a migration project
+    List<String> users = getUsers("membership-site-contributer");
+    users.addAll(getUsers("membership-site-contributor"));
+    return users;
   }
 
   /**

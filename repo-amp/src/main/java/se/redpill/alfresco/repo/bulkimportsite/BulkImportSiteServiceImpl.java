@@ -255,7 +255,7 @@ public class BulkImportSiteServiceImpl implements InitializingBean, BulkImportSi
     addMembersWithRole(siteInfo.getShortName(), "SiteManager", users);
     users = place.getSiteCollaborators();
     addMembersWithRole(siteInfo.getShortName(), "SiteCollaborator", users);
-    users = place.getSiteContributers();
+    users = place.getSiteContributors();
     addMembersWithRole(siteInfo.getShortName(), "SiteContributor", users);
     users = place.getSiteConsumers();
     addMembersWithRole(siteInfo.getShortName(), "SiteConsumer", users);
