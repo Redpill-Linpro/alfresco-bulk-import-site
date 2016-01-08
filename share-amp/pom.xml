@@ -15,7 +15,7 @@
   <name>Alfresco Share AMP Module</name>
 
   <properties>
-    <module.id>quickr-migrate-share</module.id>
+    <module.id>alfresco-bulk-import-site-share-amp</module.id>
     <alfresco.client.war>share</alfresco.client.war>
     <tomcat.home>${tomcat.share.home}</tomcat.home>
     <tomcat.port>${tomcat.share.port}</tomcat.port>
