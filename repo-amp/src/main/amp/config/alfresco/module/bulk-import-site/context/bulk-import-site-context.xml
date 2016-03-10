@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+  <bean id="redpill.bulkImportSiteService" class="se.redpill.alfresco.repo.bulkimportsite.BulkImportSiteServiceImpl">
+    <property name="siteService" ref="SiteService" />
+    <property name="nodeService" ref="NodeService" />
+    <property name="searchService" ref="SearchService" />
+    <property name="bulkFilesystemImporter" ref="bulkFilesystemImporter" />
+    <property name="streamingNodeImporterFactory" ref="streamingNodeImporterFactory" />
+    <property name="transactionHelper" ref="retryingTransactionHelper" />
+    <property name="importPath" value="${bulkimportsite.importPath}" />
+    <property name="skipEmptyStrings" value="${bulkimportsite.skipEmptyStrings}" />
+    <property name="shareConnector" ref="redpill.bulkImportSiteShareConnector" />
+    <property name="personService" ref="PersonService" />
+    <property name="namespaceService" ref="NamespaceService" />
+    <property name="numThreads" value="${bulkimportsite.numThreads}" />
+    <property name="batchSize" value="${bulkimportsite.batchSize}" />
+    <property name="replaceExisting" value="${bulkimportsite.replaceExisting}" />
+  </bean>
+  
+  <bean id="redpill.bulkImportSiteShareConnector" class="se.redpill.alfresco.repo.bulkimportsite.connector.ShareConnector">
+    <property name="siteService" ref="SiteService" />
+    <property name="authenticationService" ref="AuthenticationService" />
+    <property name="namespaceService" ref="NamespaceService" />
+    <property name="transactionHelper" ref="retryingTransactionHelper" />
+    <property name="shareUrl" value="${bulkimportsite.shareUrl}" />
+    <property name="shareProtocol" value="${bulkimportsite.shareProtocol}" />
+    <property name="alfrescoUsername" value="${bulkimportsite.alfresco.username}" />
+    <property name="alfrescoPassword" value="${bulkimportsite.alfresco.password}" />
+    <property name="createSiteScript" value="${bulkimportsite.customizations.createSiteScript}" />
+  </bean>
+
+  <bean id="webscript.se.redpill.alfresco.repo.console.migration.site-import.post" class="se.redpill.alfresco.repo.bulkimportsite.webscripts.BulkImportSitePost" parent="webscript">
+    <property name="bulkImportSiteService" ref="redpill.bulkImportSiteService" />
+  </bean>
+
+  <bean id="webscript.se.redpill.alfresco.repo.console.migration.site-import.get" class="se.redpill.alfresco.repo.bulkimportsite.webscripts.BulkImportSiteGet" parent="webscript">
+    <property name="bulkImportSiteService" ref="redpill.bulkImportSiteService" />
+  </bean>
+
+</beans>

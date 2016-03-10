@@ -1,0 +1,9 @@
+<webscript>
+  <shortname>Migrate a site on disk to a Share site</shortname>
+  <description>Migrate a Quickr Place to a Share site</description>
+  <url>/redpill/bulkimporttool/sites/{placeShortName}</url>
+  <format default="json">argument</format>
+  <authentication>admin</authentication>
+  <transaction>required</transaction>
+  <family>Bulk Site Import Tool</family>
+</webscript>
