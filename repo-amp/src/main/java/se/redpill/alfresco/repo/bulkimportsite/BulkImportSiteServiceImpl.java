@@ -21,6 +21,7 @@ import javax.transaction.SystemException;
 import org.alfresco.error.AlfrescoRuntimeException;
 import org.alfresco.repo.bulkimport.BulkFilesystemImporter;
 import org.alfresco.repo.bulkimport.BulkImportParameters;
+import org.alfresco.repo.bulkimport.BulkImportStatus;
 import org.alfresco.repo.bulkimport.NodeImporter;
 import org.alfresco.repo.bulkimport.impl.StreamingNodeImporterFactory;
 import org.alfresco.repo.security.authentication.AuthenticationUtil.RunAsWork;
@@ -39,6 +40,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.Assert;
 
 import se.redpill.alfresco.repo.bulkimportsite.connector.ShareConnector;
+import se.redpill.alfresco.repo.bulkimportsite.connector.impl.ShareConnectorImpl;
 import se.redpill.alfresco.repo.bulkimportsite.facade.AuthenticationUtilFacade;
 import se.redpill.alfresco.repo.bulkimportsite.facade.AuthenticationUtilFacadeImpl;
 import se.redpill.alfresco.repo.bulkimportsite.model.Site;
@@ -146,6 +148,11 @@ public class BulkImportSiteServiceImpl implements InitializingBean, BulkImportSi
 
       @Override
       public Void doWork() throws Exception {
+
+        if (bulkFilesystemImporter.getStatus().inProgress()) {
+          throw new AlfrescoRuntimeException("Import already in progress");
+        }
+
         SiteInfo siteInfo = siteService.getSite(place.getShortName());
 
         if (siteInfo == null) {
@@ -202,7 +209,7 @@ public class BulkImportSiteServiceImpl implements InitializingBean, BulkImportSi
 
               shareConnector.deleteShareSite(place, cookies);
 
-              throw new AlfrescoRuntimeException("Failed to bulk import documents into site " + siteInfo.getShortName(), e);
+              throw new AlfrescoRuntimeException("Failed to bulk import documents into site " + siteInfo.getShortName() + "Cause: " + e.getMessage(), e);
             }
           }
         }
@@ -228,8 +235,8 @@ public class BulkImportSiteServiceImpl implements InitializingBean, BulkImportSi
    * @throws HeuristicMixedException
    * @throws HeuristicRollbackException
    */
-  protected void bulkImport(String documentsPath, NodeRef documentLibrary) throws NotSupportedException, SystemException, SecurityException, IllegalStateException, RollbackException,
-      HeuristicMixedException, HeuristicRollbackException {
+  protected void bulkImport(String documentsPath, NodeRef documentLibrary)
+      throws NotSupportedException, SystemException, SecurityException, IllegalStateException, RollbackException, HeuristicMixedException, HeuristicRollbackException {
     logger.info("Starting import for " + documentsPath + " into " + documentLibrary);
     NodeImporter nodeImporter = streamingNodeImporterFactory.getNodeImporter(new File(documentsPath));
     BulkImportParameters bulkImportParameters = new BulkImportParameters();
@@ -237,7 +244,7 @@ public class BulkImportSiteServiceImpl implements InitializingBean, BulkImportSi
     bulkImportParameters.setReplaceExisting(replaceExisting);
     bulkImportParameters.setBatchSize(batchSize);
     bulkImportParameters.setNumThreads(numThreads);
-    bulkFilesystemImporter.bulkImport(bulkImportParameters, nodeImporter);
+    bulkFilesystemImporter.asyncBulkImport(bulkImportParameters, nodeImporter);
 
   }
 
@@ -381,5 +388,15 @@ public class BulkImportSiteServiceImpl implements InitializingBean, BulkImportSi
     Assert.notNull(shareConnector, "you must provide an instance of ShareConnector");
     Assert.notNull(personService, "you must provide an instance of PersonService");
     Assert.notNull(namespaceService, "you must provide an instance of NamespaceService");
+  }
+
+  @Override
+  public boolean inProgress() {
+    return bulkFilesystemImporter.getStatus().inProgress();
+  }
+
+  @Override
+  public BulkImportStatus getStatus() {
+    return bulkFilesystemImporter.getStatus();
   }
 }

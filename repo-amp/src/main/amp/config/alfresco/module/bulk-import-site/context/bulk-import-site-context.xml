@@ -18,8 +18,8 @@
     <property name="batchSize" value="${bulkimportsite.batchSize}" />
     <property name="replaceExisting" value="${bulkimportsite.replaceExisting}" />
   </bean>
-  
-  <bean id="redpill.bulkImportSiteShareConnector" class="se.redpill.alfresco.repo.bulkimportsite.connector.ShareConnector">
+
+  <bean id="redpill.bulkImportSiteShareConnector" class="se.redpill.alfresco.repo.bulkimportsite.connector.impl.ShareConnectorImpl">
     <property name="siteService" ref="SiteService" />
     <property name="authenticationService" ref="AuthenticationService" />
     <property name="namespaceService" ref="NamespaceService" />
@@ -31,6 +31,15 @@
     <property name="createSiteScript" value="${bulkimportsite.customizations.createSiteScript}" />
   </bean>
 
+  <bean id="redpill.bulkImportSiteRepositoryShareEmulatorConnector" class="se.redpill.alfresco.repo.bulkimportsite.connector.impl.RepositoryShareEmulatorConnectorImpl">
+    <property name="nodeService" ref="NodeService" />
+    <property name="siteService" ref="SiteService" />
+    <property name="authenticationService" ref="AuthenticationService" />
+    <property name="namespaceService" ref="NamespaceService" />
+    <property name="transactionHelper" ref="retryingTransactionHelper" />
+    <property name="alfrescoUsername" value="${bulkimportsite.alfresco.username}" />
+  </bean>
+
   <bean id="webscript.se.redpill.alfresco.repo.console.migration.site-import.post" class="se.redpill.alfresco.repo.bulkimportsite.webscripts.BulkImportSitePost" parent="webscript">
     <property name="bulkImportSiteService" ref="redpill.bulkImportSiteService" />
   </bean>
@@ -39,4 +48,7 @@
     <property name="bulkImportSiteService" ref="redpill.bulkImportSiteService" />
   </bean>
 
+  <bean id="webscript.se.redpill.alfresco.repo.console.migration.site-import-status.get" class="se.redpill.alfresco.repo.bulkimportsite.webscripts.BulkImportSiteStatusGet" parent="webscript">
+    <property name="bulkImportSiteService" ref="redpill.bulkImportSiteService" />
+  </bean>
 </beans>

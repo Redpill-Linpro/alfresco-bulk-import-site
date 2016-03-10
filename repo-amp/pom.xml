@@ -69,6 +69,7 @@
       <groupId>org.jmock</groupId>
       <artifactId>jmock-junit4</artifactId>
       <scope>test</scope>
+      <version>2.6.0</version>
     </dependency>
     <dependency>
       <groupId>org.jmock</groupId>

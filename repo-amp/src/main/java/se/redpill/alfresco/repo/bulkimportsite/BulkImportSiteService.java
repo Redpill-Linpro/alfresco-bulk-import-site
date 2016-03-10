@@ -5,6 +5,8 @@ import java.net.URISyntaxException;
 import java.util.InvalidPropertiesFormatException;
 import java.util.List;
 
+import org.alfresco.repo.bulkimport.BulkImportStatus;
+
 import se.redpill.alfresco.repo.bulkimportsite.model.Site;
 
 public interface BulkImportSiteService {
@@ -31,4 +33,15 @@ public interface BulkImportSiteService {
    * @throws Exception
    */
   public void importSite(Site site) throws Exception;
+  
+  /**
+   * Indicates if we have a running import!
+   * @return
+   */
+  public boolean inProgress();
+  /**
+   * Indicates if we have a running import!
+   * @return
+   */
+  public BulkImportStatus getStatus();
 }
