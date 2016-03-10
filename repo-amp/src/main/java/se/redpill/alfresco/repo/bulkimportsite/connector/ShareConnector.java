@@ -37,15 +37,16 @@ import se.redpill.alfresco.repo.bulkimportsite.model.Site;
 public class ShareConnector implements InitializingBean {
   private static Logger logger = Logger.getLogger(ShareConnector.class);
 
-  AuthenticationService authenticationService;
-  NamespaceService namespaceService;
-  SiteService siteService;
-  RetryingTransactionHelper transactionHelper;
+  protected AuthenticationService authenticationService;
+  protected NamespaceService namespaceService;
+  protected SiteService siteService;
+  protected RetryingTransactionHelper transactionHelper;
   
-  private String alfrescoUsername;
-  private String alfrescoPassword;
-  private String shareUrl;
-  private String shareProtocol;
+  protected String alfrescoUsername;
+  protected String alfrescoPassword;
+  protected String shareUrl;
+  protected String shareProtocol;
+  protected String createSiteScript;
  
   public Map<String, String> createSite(Site site) {
     Map<String, String> cookies;
@@ -139,7 +140,7 @@ public class ShareConnector implements InitializingBean {
 
     JSONObject json = new JSONObject(properties);
     logger.trace("Calling "+shareUrl + "/service/modules/create-site to create a site");
-    Response response = remoteClient.call(shareUrl + "/service/modules/create-site", json.toString());
+    Response response = remoteClient.call(shareUrl + createSiteScript, json.toString());
 
     if (response.getStatus().getCode() != 200) {
       throw new RuntimeException(response.toString());
@@ -296,6 +297,10 @@ public class ShareConnector implements InitializingBean {
   public void setTransactionHelper(RetryingTransactionHelper transactionHelper) {
     this.transactionHelper = transactionHelper;
   }
+  
+  public void setCreateSiteScript(String createSiteScript) {
+    this.createSiteScript = createSiteScript;
+  }
 
   @Override
   public void afterPropertiesSet() throws Exception {
@@ -307,5 +312,6 @@ public class ShareConnector implements InitializingBean {
     Assert.notNull(authenticationService, "you must provide an instance of AuthenticationService");
     Assert.notNull(namespaceService, "you must provide an instance of NamespaceService");
     Assert.notNull(transactionHelper, "you must provide an instance of RetryingTransactionHelper");
+    Assert.notNull(createSiteScript, "you must provide the bulkimport.customizations.createSiteScript in alfresco-global.properties");
   }
 }

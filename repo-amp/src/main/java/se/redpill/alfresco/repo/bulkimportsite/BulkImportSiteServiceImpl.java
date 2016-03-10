@@ -30,6 +30,7 @@ import org.alfresco.service.cmr.repository.NodeService;
 import org.alfresco.service.cmr.search.SearchService;
 import org.alfresco.service.cmr.security.AuthorityService;
 import org.alfresco.service.cmr.security.PersonService;
+import org.alfresco.service.cmr.security.PersonService.PersonInfo;
 import org.alfresco.service.cmr.site.SiteInfo;
 import org.alfresco.service.cmr.site.SiteService;
 import org.alfresco.service.namespace.NamespaceService;
@@ -254,7 +255,7 @@ public class BulkImportSiteServiceImpl implements InitializingBean, BulkImportSi
     addMembersWithRole(siteInfo.getShortName(), "SiteManager", users);
     users = place.getSiteCollaborators();
     addMembersWithRole(siteInfo.getShortName(), "SiteCollaborator", users);
-    users = place.getSiteContributers();
+    users = place.getSiteContributors();
     addMembersWithRole(siteInfo.getShortName(), "SiteContributor", users);
     users = place.getSiteConsumers();
     addMembersWithRole(siteInfo.getShortName(), "SiteConsumer", users);
@@ -271,14 +272,18 @@ public class BulkImportSiteServiceImpl implements InitializingBean, BulkImportSi
    *          A list of users
    */
   protected void addMembersWithRole(String siteShortName, String role, List<String> users) {
-    for (String user : users) {
-      if (user.length() > 0) {
-        NodeRef personOrNull = personService.getPersonOrNull(user);
+    for (String username : users) {
+      if (username != null && username.length() > 0) {
+        NodeRef personOrNull = personService.getPersonOrNull(username);
+        if (personOrNull != null) {
+          PersonInfo person = personService.getPerson(personOrNull);
+          username = person.getUserName();
+        }
         if (personOrNull == null) {
-          logger.warn("User " + user + " could not not be added as role " + role + " on site " + siteShortName + ". The user does not exist.");
+          logger.warn("User " + username + " could not not be added as role " + role + " on site " + siteShortName + ". The user does not exist.");
         } else {
-          logger.info("Adding user " + user + " as role " + role + " on site " + siteShortName);
-          siteService.setMembership(siteShortName, user, role);
+          logger.info("Adding user " + username + " as role " + role + " on site " + siteShortName);
+          siteService.setMembership(siteShortName, username, role);
         }
       }
     }
@@ -352,15 +357,15 @@ public class BulkImportSiteServiceImpl implements InitializingBean, BulkImportSi
   public void setNumThreads(int numThreads) {
     this.numThreads = numThreads;
   }
-  
+
   public void setBatchSize(int batchSize) {
     this.batchSize = batchSize;
   }
-  
+
   public void setReplaceExisting(boolean replaceExisting) {
     this.replaceExisting = replaceExisting;
   }
-  
+
   @Override
   public void afterPropertiesSet() throws Exception {
 

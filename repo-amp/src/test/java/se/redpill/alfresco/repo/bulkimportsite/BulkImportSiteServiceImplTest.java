@@ -139,7 +139,7 @@ public class BulkImportSiteServiceImplTest {
     assertNotNull(site.getShortName());
     assertEquals(1, site.getSiteManagers().size());
     assertEquals(1, site.getSiteCollaborators().size());
-    assertEquals(1, site.getSiteContributers().size());
+    assertEquals(2, site.getSiteContributors().size());
     assertEquals(1, site.getSiteConsumers().size());
   }
 
@@ -166,7 +166,7 @@ public class BulkImportSiteServiceImplTest {
     assertNotNull(site.getShortName());
     assertEquals(0, site.getSiteManagers().size());
     assertEquals(0, site.getSiteCollaborators().size());
-    assertEquals(0, site.getSiteContributers().size());
+    assertEquals(0, site.getSiteContributors().size());
     assertEquals(0, site.getSiteConsumers().size());
   }
 

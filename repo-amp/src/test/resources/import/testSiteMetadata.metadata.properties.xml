@@ -9,5 +9,6 @@
   <entry key="membership-site-manager">manager</entry>
   <entry key="membership-site-collaborator">collaborator</entry>
   <entry key="membership-site-contributer">contributer</entry>
+  <entry key="membership-site-contributor">contributor</entry>
   <entry key="membership-site-consumer">consumer</entry>
 </properties>

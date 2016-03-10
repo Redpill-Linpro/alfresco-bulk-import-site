@@ -28,6 +28,7 @@
     <property name="shareProtocol" value="${bulkimportsite.shareProtocol}" />
     <property name="alfrescoUsername" value="${bulkimportsite.alfresco.username}" />
     <property name="alfrescoPassword" value="${bulkimportsite.alfresco.password}" />
+    <property name="createSiteScript" value="${bulkimportsite.customizations.createSiteScript}" />
   </bean>
 
   <bean id="webscript.se.redpill.alfresco.repo.console.migration.site-import.post" class="se.redpill.alfresco.repo.bulkimportsite.webscripts.BulkImportSitePost" parent="webscript">

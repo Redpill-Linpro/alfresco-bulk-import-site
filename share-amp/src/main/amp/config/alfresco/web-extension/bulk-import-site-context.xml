@@ -3,7 +3,7 @@
 <beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 
   <!-- Override WebScript Messages - add slingshot application messages -->
-  <bean id="quickr-migrate.custom.resources" class="org.springframework.extensions.surf.util.ResourceBundleBootstrapComponent">
+  <bean id="rl-bulk-import-site.custom.resources" class="org.springframework.extensions.surf.util.ResourceBundleBootstrapComponent">
     <property name="resourceBundles">
       <list>
         <value>alfresco.messages.rl-bulk-import-site</value>
