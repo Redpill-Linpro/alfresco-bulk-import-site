@@ -17,6 +17,7 @@
     <property name="numThreads" value="${bulkimportsite.numThreads}" />
     <property name="batchSize" value="${bulkimportsite.batchSize}" />
     <property name="replaceExisting" value="${bulkimportsite.replaceExisting}" />
+    <property name="allowIncremental" value="${bulkimportsite.allowIncremental}" />
   </bean>
 
   <bean id="redpill.bulkImportSiteShareConnector" class="se.redpill.alfresco.repo.bulkimportsite.connector.impl.ShareConnectorImpl">

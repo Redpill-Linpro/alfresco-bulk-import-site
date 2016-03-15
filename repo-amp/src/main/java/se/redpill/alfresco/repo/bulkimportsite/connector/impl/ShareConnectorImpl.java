@@ -35,6 +35,7 @@ import se.redpill.alfresco.repo.bulkimportsite.connector.ShareConnector;
 import se.redpill.alfresco.repo.bulkimportsite.model.Site;
 
 public class ShareConnectorImpl implements ShareConnector, InitializingBean {
+
   private static Logger logger = Logger.getLogger(ShareConnectorImpl.class);
 
   protected AuthenticationService authenticationService;
@@ -49,13 +50,7 @@ public class ShareConnectorImpl implements ShareConnector, InitializingBean {
   protected String createSiteScript;
 
   @Override
-  public Map<String, String> createSite(Site site) {
-    Map<String, String> cookies;
-    try {
-      cookies = loginToShare();
-    } catch (Exception e) {
-      throw new AlfrescoRuntimeException("Error connecting to share", e);
-    }
+  public void createSite(Map<String, String> cookies, Site site) {
     touchCreateSiteWebscript(cookies);
     String sessionId = cookies.get("JSESSIONID");
     if (sessionId == null) {
@@ -64,7 +59,6 @@ public class ShareConnectorImpl implements ShareConnector, InitializingBean {
     logger.info("creating site: " + site.getShortName());
 
     createSiteByShareWebscriptPost(site, cookies);
-    return cookies;
   }
 
   @Override
@@ -190,6 +184,7 @@ public class ShareConnectorImpl implements ShareConnector, InitializingBean {
     }
   }
 
+  @Override
   public Map<String, String> loginToShare() throws UnsupportedEncodingException, IOException, ClientProtocolException {
     DefaultHttpClient httpclient = new DefaultHttpClient();
     HttpPost doLogin = new HttpPost(shareUrl + "/page/dologin");

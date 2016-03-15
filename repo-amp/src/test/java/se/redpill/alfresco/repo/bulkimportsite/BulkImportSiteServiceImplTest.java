@@ -198,13 +198,13 @@ public class BulkImportSiteServiceImplTest {
         oneOf(siteService).getSite(SHORT_NAME2);
         will(returnValue(null));
 
-        oneOf(shareConnector).createSite(site);
+        oneOf(shareConnector).createSite(with(any(Map.class)), with(site));
         will(returnValue(null));
 
         allowing(siteService).getSite(SHORT_NAME);
         will(returnValue(siteInfo));
 
-        oneOf(shareConnector).createDocumentLibrary(null, SHORT_NAME);
+        oneOf(shareConnector).createDocumentLibrary(with(any(Map.class)), with(SHORT_NAME));
         will(returnValue(docLibNodeRef));
 
         oneOf(streamingNodeImporterFactory).getNodeImporter(with(any(File.class)));
@@ -214,6 +214,8 @@ public class BulkImportSiteServiceImplTest {
         
         oneOf(nodeService).addProperties(with(siteNodeRef), with(any(Map.class)));
         oneOf(siteService).getContainer(SHORT_NAME, SiteService.DOCUMENT_LIBRARY);
+        will(returnValue(null));
+        oneOf(siteService).getContainer(SHORT_NAME, SiteService.DOCUMENT_LIBRARY);
         will(returnValue(docLibNodeRef));
         
         oneOf(bulkFilesystemImporter).getStatus();
@@ -221,6 +223,8 @@ public class BulkImportSiteServiceImplTest {
         
         oneOf(bis).inProgress();
         will(returnValue(false));
+        
+        oneOf(shareConnector).loginToShare();
       }
     });
     bissi.importSite(site);
@@ -256,7 +260,7 @@ public class BulkImportSiteServiceImplTest {
         oneOf(siteService).getSite(SHORT_NAME2);
         will(returnValue(null));
 
-        oneOf(shareConnector).createSite(site);
+        oneOf(shareConnector).createSite(null, site);
         will(returnValue(null));
 
         allowing(siteService).getSite(SHORT_NAME);

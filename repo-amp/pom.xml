@@ -13,7 +13,7 @@
 
 	<artifactId>alfresco-bulk-import-site-repo-amp</artifactId>
 	<packaging>amp</packaging>
-	<name>Alfresco Repository AMP Module</name>
+	<name>Bulk import tool for site structure - Alfresco Repository AMP Module</name>
 
 	<properties>
 		<module.id>alfresco-bulk-import-site-repo-amp</module.id>

@@ -1,6 +1,8 @@
 package se.redpill.alfresco.repo.bulkimportsite.connector.impl;
 
-import java.util.List;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.alfresco.model.ContentModel;
@@ -13,6 +15,7 @@ import org.alfresco.service.cmr.site.SiteService;
 import org.alfresco.service.cmr.site.SiteVisibility;
 import org.alfresco.service.namespace.NamespaceService;
 import org.alfresco.service.namespace.QName;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.Assert;
@@ -23,11 +26,12 @@ import se.redpill.alfresco.repo.bulkimportsite.model.Site;
 /**
  * This is currently used for testing. Will not work with a live import since it
  * does not generate dashboard.xmls and stuff
- * 
+ *
  * @author Marcus Svartmark <marcus.svartmark@redpill-linpro.com>
  *
  */
 public class RepositoryShareEmulatorConnectorImpl implements ShareConnector, InitializingBean {
+
   private static Logger logger = Logger.getLogger(RepositoryShareEmulatorConnectorImpl.class);
 
   protected AuthenticationService authenticationService;
@@ -38,7 +42,7 @@ public class RepositoryShareEmulatorConnectorImpl implements ShareConnector, Ini
   protected String alfrescoUsername;
 
   @Override
-  public Map<String, String> createSite(Site siteData) {
+  public void createSite(Map<String, String> cookies, Site siteData) {
     final String sitePreset = siteData.getPreset();
     final String description = siteData.getDescription();
     final String shortName = siteData.getShortName();
@@ -53,7 +57,6 @@ public class RepositoryShareEmulatorConnectorImpl implements ShareConnector, Ini
       }
     }, false, true);
 
-    return null;
   }
 
   @Override
@@ -116,6 +119,11 @@ public class RepositoryShareEmulatorConnectorImpl implements ShareConnector, Ini
     Assert.notNull(namespaceService, "you must provide an instance of NamespaceService");
     Assert.notNull(transactionHelper, "you must provide an instance of RetryingTransactionHelper");
     Assert.notNull(nodeService, "you must provide an instance of NodeService");
+  }
+
+  @Override
+  public Map<String, String> loginToShare() throws UnsupportedEncodingException, IOException, ClientProtocolException {
+    return new HashMap<String, String>();
   }
 
 }

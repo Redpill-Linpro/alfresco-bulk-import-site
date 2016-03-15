@@ -64,6 +64,8 @@ public class BulkImportSiteServiceImplIntegrationTest extends AbstractRepoIntegr
     String importPath = getClass().getResource("/dummyfile.donottouch").getFile();
     importPath = FilenameUtils.getFullPath(importPath) + "import";
     bulkImportSiteService.setImportPath(importPath);
+    assertFalse("Site testSiteMetadata must not exist", _siteService.hasSite("testSiteMetadata"));
+    assertFalse("Site testSiteNoMetadata must not exist", _siteService.hasSite("testSiteNoMetadata"));
   }
 
   @After
@@ -92,6 +94,7 @@ public class BulkImportSiteServiceImplIntegrationTest extends AbstractRepoIntegr
 
   @Test
   public void testImportInProgress() throws Exception {
+    
     Site siteData = bulkImportSiteService.getSite("testSiteMetadata");
     Site siteData2 = bulkImportSiteService.getSite("testSiteNoMetadata");
     bulkImportSiteService.importSite(siteData);
@@ -112,6 +115,41 @@ public class BulkImportSiteServiceImplIntegrationTest extends AbstractRepoIntegr
     }
     System.out.println(" Done!");
 
+    _siteService.deleteSite(siteInfo.getShortName());
+    removeSiteRoles(siteInfo.getShortName());
+    assertFalse(_siteService.hasSite(siteInfo.getShortName()));
+  }
+  
+  @Test
+  public void testIncrementalImport() throws Exception {
+    Site siteData = bulkImportSiteService.getSite("testSiteMetadata");
+    bulkImportSiteService.importSite(siteData);
+    assertTrue(_siteService.hasSite("testSiteMetadata"));
+    SiteInfo siteInfo = _siteService.getSite("testSiteMetadata");
+    NodeRef nodeRef = siteInfo.getNodeRef();
+    _nodeService.addAspect(nodeRef, ContentModel.ASPECT_TEMPORARY, null);
+    System.out.print("Waiting for import to finish");
+    while (inProgress()) {
+      Thread.sleep(1000);
+      System.out.print(".");
+    }
+    System.out.println(" Done!");
+
+    bulkImportSiteService.setAllowIncremental(true);
+    
+    siteData = bulkImportSiteService.getSite("testSiteMetadata");
+    bulkImportSiteService.importSite(siteData);
+    assertTrue(_siteService.hasSite("testSiteMetadata"));
+    siteInfo = _siteService.getSite("testSiteMetadata");
+    nodeRef = siteInfo.getNodeRef();
+    _nodeService.addAspect(nodeRef, ContentModel.ASPECT_TEMPORARY, null);
+    System.out.print("Waiting for incremental import to finish");
+    while (inProgress()) {
+      Thread.sleep(1000);
+      System.out.print(".");
+    }
+    System.out.println(" Done!");
+    
     _siteService.deleteSite(siteInfo.getShortName());
     removeSiteRoles(siteInfo.getShortName());
     assertFalse(_siteService.hasSite(siteInfo.getShortName()));

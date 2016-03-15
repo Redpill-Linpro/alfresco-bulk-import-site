@@ -12,7 +12,7 @@
   
   <artifactId>alfresco-bulk-import-site-share-amp</artifactId>
   <packaging>amp</packaging>
-  <name>Alfresco Share AMP Module</name>
+  <name>Bulk import tool for site structure - Alfresco Share AMP Module</name>
 
   <properties>
     <module.id>alfresco-bulk-import-site-share-amp</module.id>
