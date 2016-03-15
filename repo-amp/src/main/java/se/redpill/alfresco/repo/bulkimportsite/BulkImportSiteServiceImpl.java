@@ -40,7 +40,6 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.Assert;
 
 import se.redpill.alfresco.repo.bulkimportsite.connector.ShareConnector;
-import se.redpill.alfresco.repo.bulkimportsite.connector.impl.ShareConnectorImpl;
 import se.redpill.alfresco.repo.bulkimportsite.facade.AuthenticationUtilFacade;
 import se.redpill.alfresco.repo.bulkimportsite.facade.AuthenticationUtilFacadeImpl;
 import se.redpill.alfresco.repo.bulkimportsite.model.Site;
@@ -154,15 +153,15 @@ public class BulkImportSiteServiceImpl implements InitializingBean, BulkImportSi
         }
 
         SiteInfo siteInfo = transactionHelper.doInTransaction(new RetryingTransactionHelper.RetryingTransactionCallback<SiteInfo>() {
-            @Override
-            public SiteInfo execute() throws Throwable {
-              return siteService.getSite(place.getShortName());
-            }
-          }, true, true);
+          @Override
+          public SiteInfo execute() throws Throwable {
+            return siteService.getSite(place.getShortName());
+          }
+        }, true, true);
         Map<String, String> cookies = null;
-        if (siteInfo!=null && !allowIncremental) {
-          throw new AlfrescoRuntimeException("Site already exist " + siteInfo.getShortName());
-        } else if (siteInfo==null) {
+        if (siteInfo != null && !allowIncremental) {
+          throw new AlfrescoRuntimeException("Site already exist and incremental updates are not allowed" + siteInfo.getShortName());
+        } else if (siteInfo == null) {
           cookies = shareConnector.loginToShare();
           shareConnector.createSite(cookies, place);
           siteInfo = transactionHelper.doInTransaction(new RetryingTransactionHelper.RetryingTransactionCallback<SiteInfo>() {
@@ -183,15 +182,15 @@ public class BulkImportSiteServiceImpl implements InitializingBean, BulkImportSi
           // Create doclib
           shareConnector.createDocumentLibrary(cookies, siteInfo.getShortName());
           documentLibrary = transactionHelper.doInTransaction(new RetryingTransactionHelper.RetryingTransactionCallback<NodeRef>() {
-          @Override
-          public NodeRef execute() throws Throwable {
-            addMembers(place, finalSiteInfo);
-            nodeService.addProperties(finalSiteInfo.getNodeRef(), place.getAlfrescoProperties(namespaceService, skipEmptyStrings));
-            return siteService.getContainer(finalSiteInfo.getShortName(), SiteService.DOCUMENT_LIBRARY);
-          }
-        }, false, true);
+            @Override
+            public NodeRef execute() throws Throwable {
+              addMembers(place, finalSiteInfo);
+              nodeService.addProperties(finalSiteInfo.getNodeRef(), place.getAlfrescoProperties(namespaceService, skipEmptyStrings));
+              return siteService.getContainer(finalSiteInfo.getShortName(), SiteService.DOCUMENT_LIBRARY);
+            }
+          }, false, true);
         }
-        
+
         final NodeRef finalDocLib = documentLibrary;
         final String documentsPath = importPath + "/" + place.getShortName() + "/documentLibrary";
 
