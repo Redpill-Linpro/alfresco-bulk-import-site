@@ -146,7 +146,7 @@ if (typeof RPL == "undefined" || !RPL) {
         this.widgets.dataTable.subscribe("checkboxClickEvent", function(oArgs){ 
           var elCheckbox = oArgs.target; 
           var oRecord = this.getRecord(elCheckbox); 
-          if (oRecord.getData().imported!==true) {
+          //if (oRecord.getData().imported!==true) {
             oRecord.setData("check",elCheckbox.checked); 
             var shortName = oRecord.getData().shortName;
             if (elCheckbox.checked) {
@@ -160,7 +160,7 @@ if (typeof RPL == "undefined" || !RPL) {
                 }
               }
             }
-          }
+          //}
         });
 
         var selectAllCheckbox = Dom.get(this.id+'-select-all');
