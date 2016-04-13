@@ -198,8 +198,18 @@ public class Site implements Serializable {
    * @return
    */
   public String getType(NamespaceService namespaceService) {
+    return getTypeQName(namespaceService).toString();
+  }
+
+  /**
+   * Gets the full type name for a site. Defaults to "st:site" unless the "type"
+   * metadata is set
+   * 
+   * @return
+   */
+  public QName getTypeQName(NamespaceService namespaceService) {
     QName qname = QName.resolveToQName(namespaceService, getType());
-    return qname.toString();
+    return qname;
   }
 
   /**
@@ -255,7 +265,8 @@ public class Site implements Serializable {
    * @return
    */
   public List<String> getSiteContributors() {
-    //Check for both contributors and contributers due to early spelling mistake during a migration project
+    // Check for both contributors and contributers due to early spelling
+    // mistake during a migration project
     List<String> users = getUsers("membership-site-contributer");
     users.addAll(getUsers("membership-site-contributor"));
     return users;

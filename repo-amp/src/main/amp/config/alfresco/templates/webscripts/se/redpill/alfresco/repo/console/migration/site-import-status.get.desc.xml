@@ -1,0 +1,9 @@
+<webscript>
+  <shortname>Get bulk import status</shortname>
+  <description>Get bulk import status</description>
+  <url>/redpill/bulkimporttool/status</url>
+  <format default="json">argument</format>
+  <authentication>admin</authentication>
+  <transaction>required</transaction>
+  <family>Bulk Site Import Tool</family>
+</webscript>

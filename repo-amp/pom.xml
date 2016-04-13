@@ -8,12 +8,12 @@
 	<parent>
 		<groupId>org.redpill-linpro.alfresco.bulkimport</groupId>
 		<artifactId>alfresco-bulk-import-site</artifactId>
-		<version>1.0.0</version>
+		<version>1.1.0</version>
 	</parent>
 
 	<artifactId>alfresco-bulk-import-site-repo-amp</artifactId>
 	<packaging>amp</packaging>
-	<name>Alfresco Repository AMP Module</name>
+	<name>Bulk import tool for site structure - Alfresco Repository AMP Module</name>
 
 	<properties>
 		<module.id>alfresco-bulk-import-site-repo-amp</module.id>
@@ -69,6 +69,7 @@
       <groupId>org.jmock</groupId>
       <artifactId>jmock-junit4</artifactId>
       <scope>test</scope>
+      <version>2.6.0</version>
     </dependency>
     <dependency>
       <groupId>org.jmock</groupId>

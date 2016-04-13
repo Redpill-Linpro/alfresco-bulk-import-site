@@ -7,12 +7,12 @@
   <parent>
     <groupId>org.redpill-linpro.alfresco.bulkimport</groupId>
     <artifactId>alfresco-bulk-import-site</artifactId>
-    <version>1.0.0</version>
+    <version>1.1.0</version>
   </parent>
   
   <artifactId>alfresco-bulk-import-site-share-amp</artifactId>
   <packaging>amp</packaging>
-  <name>Alfresco Share AMP Module</name>
+  <name>Bulk import tool for site structure - Alfresco Share AMP Module</name>
 
   <properties>
     <module.id>alfresco-bulk-import-site-share-amp</module.id>

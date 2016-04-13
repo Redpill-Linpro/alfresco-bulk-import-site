@@ -146,7 +146,7 @@ if (typeof RPL == "undefined" || !RPL) {
         this.widgets.dataTable.subscribe("checkboxClickEvent", function(oArgs){ 
           var elCheckbox = oArgs.target; 
           var oRecord = this.getRecord(elCheckbox); 
-          if (oRecord.getData().imported!==true) {
+          //if (oRecord.getData().imported!==true) {
             oRecord.setData("check",elCheckbox.checked); 
             var shortName = oRecord.getData().shortName;
             if (elCheckbox.checked) {
@@ -160,7 +160,7 @@ if (typeof RPL == "undefined" || !RPL) {
                 }
               }
             }
-          }
+          //}
         });
 
         var selectAllCheckbox = Dom.get(this.id+'-select-all');
@@ -182,10 +182,11 @@ if (typeof RPL == "undefined" || !RPL) {
       },
 
       onSubmitClick: function BulkImportSite_onSubmitClick()  {
-        this.progress = 0;
+        this.progress = -1;
         this.failed = 0;
         this.showPopup();
-        this.doImport();
+        this.checkIfRunning();
+        //this.doImport();
       },
 
       showPopup: function BulkImportSite_showPopup() {
@@ -197,6 +198,25 @@ if (typeof RPL == "undefined" || !RPL) {
           modal : true,
           noEscape : true
         });
+      },
+      
+      checkIfRunning: function BulkImportSite_checkIfRunning() {
+    	  var me = this;
+    	  Alfresco.util.Ajax.request(
+	        {
+	          url: Alfresco.constants.PROXY_URI + "redpill/bulkimporttool/status",
+	          method: Alfresco.util.Ajax.GET,
+	          successCallback:
+	          {
+	            fn: this.onStatusSuccess,
+	            scope: me
+	          },
+	          failureCallback:
+	          {
+	            fn: this.onStatusFailure,
+	            scope: me
+	          }
+	      });
       },
 
       doImport: function BulkImportSite_doImport() {
@@ -224,27 +244,47 @@ if (typeof RPL == "undefined" || !RPL) {
 
       onImportSuccess: function BulkImportSite_onImportSuccess(p_obj)
       {
-        this.progress++;
-        var processedDomItem = Dom.get(this.id + "-processed");
-        if (processedDomItem===null) {
-          return;
-          //this.showPopup();
-        }
-        this.updateUiStatistics();
-        this.doImport();
+    	  var me = this;
+    	  setTimeout(function() {me.checkIfRunning(); }, 5000);
       },
 
       onImportFailure: function BulkImportSite_onImportSuccess(p_obj)
       {
-        this.progress++;
-        this.failed++;
+    	  var me = this;
+    	  this.failed++;
+    	  setTimeout(function() {me.checkIfRunning(); }, 5000);
+      },
+      
+      onStatusSuccess: function BulkImportSite_onStatusSuccess(p_obj)
+      {
+    	var me = this;
         var processedDomItem = Dom.get(this.id + "-processed");
         if (processedDomItem===null) {
           return;
           //this.showPopup();
         }
-        this.updateUiStatistics();
-        this.doImport();
+        if (p_obj.json.inProgress===false) {
+        	this.progress++;
+        	if (p_obj.json.lastSuccess===false) {
+        		this.failed++;
+        	}
+        	this.updateUiStatistics();
+        	this.doImport();
+        } else {
+        	setTimeout(function() {me.checkIfRunning(); }, 5000);
+        }        
+        
+      },
+
+      onStatusFailure: function BulkImportSite_onStatusSuccess(p_obj)
+      {
+    	var me = this;
+        var processedDomItem = Dom.get(this.id + "-processed");
+        if (processedDomItem===null) {
+          return;
+          //this.showPopup();
+        }
+        setTimeout(function() {me.checkIfRunning(); }, 5000);
       },
 
       updateUiStatistics: function BulkImportSite_onImportSuccess() {

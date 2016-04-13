@@ -21,6 +21,7 @@ import javax.transaction.SystemException;
 import org.alfresco.error.AlfrescoRuntimeException;
 import org.alfresco.repo.bulkimport.BulkFilesystemImporter;
 import org.alfresco.repo.bulkimport.BulkImportParameters;
+import org.alfresco.repo.bulkimport.BulkImportStatus;
 import org.alfresco.repo.bulkimport.NodeImporter;
 import org.alfresco.repo.bulkimport.impl.StreamingNodeImporterFactory;
 import org.alfresco.repo.security.authentication.AuthenticationUtil.RunAsWork;
@@ -62,11 +63,12 @@ public class BulkImportSiteServiceImpl implements InitializingBean, BulkImportSi
 
   private String importPath;
   private boolean skipEmptyStrings = false;
-  protected boolean replaceExisting = true;
+  protected boolean replaceExisting = false;
   protected int batchSize = 40;
   protected int numThreads = 4;
   // for logging
   static int noOfFilesWritten = 0;
+  protected boolean allowIncremental = false;
 
   @Override
   public List<Site> getAllSites() throws URISyntaxException, InvalidPropertiesFormatException, IOException {
@@ -103,9 +105,8 @@ public class BulkImportSiteServiceImpl implements InitializingBean, BulkImportSi
 
   /**
    * Read site properties from file
-   * 
-   * @param metadataFile
-   *          Path to the property file to read
+   *
+   * @param metadataFile Path to the property file to read
    * @return
    * @throws InvalidPropertiesFormatException
    * @throws IOException
@@ -146,66 +147,82 @@ public class BulkImportSiteServiceImpl implements InitializingBean, BulkImportSi
 
       @Override
       public Void doWork() throws Exception {
-        SiteInfo siteInfo = siteService.getSite(place.getShortName());
 
-        if (siteInfo == null) {
-          // shareConnector.createSite(place);
-        } else {
-          throw new AlfrescoRuntimeException("Site already exist " + siteInfo.getShortName());
+        if (bulkFilesystemImporter.getStatus().inProgress()) {
+          throw new AlfrescoRuntimeException("Import already in progress");
         }
 
-        if (siteInfo == null) {
-          final Map<String, String> cookies = shareConnector.createSite(place);
+        SiteInfo siteInfo = transactionHelper.doInTransaction(new RetryingTransactionHelper.RetryingTransactionCallback<SiteInfo>() {
+          @Override
+          public SiteInfo execute() throws Throwable {
+            return siteService.getSite(place.getShortName());
+          }
+        }, true, true);
+        Map<String, String> cookies = null;
+        if (siteInfo != null && !allowIncremental) {
+          throw new AlfrescoRuntimeException("Site already exist and incremental updates are not allowed" + siteInfo.getShortName());
+        } else if (siteInfo == null) {
+          cookies = shareConnector.loginToShare();
+          shareConnector.createSite(cookies, place);
           siteInfo = transactionHelper.doInTransaction(new RetryingTransactionHelper.RetryingTransactionCallback<SiteInfo>() {
             @Override
             public SiteInfo execute() throws Throwable {
               return siteService.getSite(place.getShortName());
             }
           }, true, true);
-
-          final SiteInfo finalSiteInfo = siteInfo;
-          if (siteInfo == null) {
-            throw new AlfrescoRuntimeException("Could not create site with short name " + place.getShortName());
-          } else {
-            // Create doclib
-            shareConnector.createDocumentLibrary(cookies, siteInfo.getShortName());
-            final NodeRef documentLibrary = transactionHelper.doInTransaction(new RetryingTransactionHelper.RetryingTransactionCallback<NodeRef>() {
-              @Override
-              public NodeRef execute() throws Throwable {
-                addMembers(place, finalSiteInfo);
-                nodeService.addProperties(finalSiteInfo.getNodeRef(), place.getAlfrescoProperties(namespaceService, skipEmptyStrings));
-                return siteService.getContainer(finalSiteInfo.getShortName(), SiteService.DOCUMENT_LIBRARY);
-              }
-            }, false, true);
-
-            final String documentsPath = importPath + "/" + place.getShortName() + "/documentLibrary";
-
-            logger.info("Documents to import for site " + place.getShortName() + " are in directory: " + documentsPath);
-
-            try {
-              if (documentLibrary == null) {
-                throw new AlfrescoRuntimeException("Document library does not exist for site " + place.getShortName());
-              }
-              transactionHelper.doInTransaction(new RetryingTransactionHelper.RetryingTransactionCallback<Void>() {
-                @Override
-                public Void execute() throws Throwable {
-
-                  bulkImport(documentsPath, documentLibrary);
-                  return null;
-                }
-              }, true, true);
-
-            } catch (Exception e) {
-              logger.error("Exception occured when importing documents into site. Deleting site");
-              // DO NOT ADD ASPECT TEMPORARY TO SITES, IT WILL LEAVE STUFF
-              // BEHIND SUCH AS SITE GROUPS
-
-              shareConnector.deleteShareSite(place, cookies);
-
-              throw new AlfrescoRuntimeException("Failed to bulk import documents into site " + siteInfo.getShortName(), e);
-            }
-          }
         }
+        if (siteInfo == null) {
+          throw new AlfrescoRuntimeException("Could not create site with short name " + place.getShortName());
+        }
+
+        final SiteInfo finalSiteInfo = siteInfo;
+        NodeRef documentLibrary = transactionHelper.doInTransaction(new RetryingTransactionHelper.RetryingTransactionCallback<NodeRef>() {
+            @Override
+            public NodeRef execute() throws Throwable {
+              return siteService.getContainer(finalSiteInfo.getShortName(), SiteService.DOCUMENT_LIBRARY);
+            }
+          }, false, true);
+        if (documentLibrary == null) {
+          // Create doclib
+          shareConnector.createDocumentLibrary(cookies, siteInfo.getShortName());
+          documentLibrary = transactionHelper.doInTransaction(new RetryingTransactionHelper.RetryingTransactionCallback<NodeRef>() {
+            @Override
+            public NodeRef execute() throws Throwable {
+              addMembers(place, finalSiteInfo);
+              nodeService.addProperties(finalSiteInfo.getNodeRef(), place.getAlfrescoProperties(namespaceService, skipEmptyStrings));
+              return siteService.getContainer(finalSiteInfo.getShortName(), SiteService.DOCUMENT_LIBRARY);
+            }
+          }, false, true);
+        }
+
+        final NodeRef finalDocLib = documentLibrary;
+        final String documentsPath = importPath + "/" + place.getShortName() + "/documentLibrary";
+
+        logger.info("Documents to import for site " + place.getShortName() + " are in directory: " + documentsPath);
+
+        try {
+          if (documentLibrary == null) {
+            throw new AlfrescoRuntimeException("Document library does not exist for site " + place.getShortName());
+          }
+          transactionHelper.doInTransaction(new RetryingTransactionHelper.RetryingTransactionCallback<Void>() {
+            @Override
+            public Void execute() throws Throwable {
+
+              bulkImport(documentsPath, finalDocLib);
+              return null;
+            }
+          }, true, true);
+
+        } catch (Exception e) {
+          logger.error("Exception occured when importing documents into site. Deleting site");
+          // DO NOT ADD ASPECT TEMPORARY TO SITES, IT WILL LEAVE STUFF
+          // BEHIND SUCH AS SITE GROUPS
+
+          shareConnector.deleteShareSite(place, cookies);
+
+          throw new AlfrescoRuntimeException("Failed to bulk import documents into site " + siteInfo.getShortName() + "Cause: " + e.getMessage(), e);
+        }
+
         return null;
       }
 
@@ -215,11 +232,10 @@ public class BulkImportSiteServiceImpl implements InitializingBean, BulkImportSi
 
   /**
    * Go on with bulk importing data
-   * 
-   * @param documentsPath
-   *          Path on disk where the documents are located
-   * @param documentLibrary
-   *          A node ref to the target where the documents should be imported
+   *
+   * @param documentsPath Path on disk where the documents are located
+   * @param documentLibrary A node ref to the target where the documents should
+   * be imported
    * @throws NotSupportedException
    * @throws SystemException
    * @throws SecurityException
@@ -228,8 +244,8 @@ public class BulkImportSiteServiceImpl implements InitializingBean, BulkImportSi
    * @throws HeuristicMixedException
    * @throws HeuristicRollbackException
    */
-  protected void bulkImport(String documentsPath, NodeRef documentLibrary) throws NotSupportedException, SystemException, SecurityException, IllegalStateException, RollbackException,
-      HeuristicMixedException, HeuristicRollbackException {
+  protected void bulkImport(String documentsPath, NodeRef documentLibrary)
+          throws NotSupportedException, SystemException, SecurityException, IllegalStateException, RollbackException, HeuristicMixedException, HeuristicRollbackException {
     logger.info("Starting import for " + documentsPath + " into " + documentLibrary);
     NodeImporter nodeImporter = streamingNodeImporterFactory.getNodeImporter(new File(documentsPath));
     BulkImportParameters bulkImportParameters = new BulkImportParameters();
@@ -237,17 +253,15 @@ public class BulkImportSiteServiceImpl implements InitializingBean, BulkImportSi
     bulkImportParameters.setReplaceExisting(replaceExisting);
     bulkImportParameters.setBatchSize(batchSize);
     bulkImportParameters.setNumThreads(numThreads);
-    bulkFilesystemImporter.bulkImport(bulkImportParameters, nodeImporter);
+    bulkFilesystemImporter.asyncBulkImport(bulkImportParameters, nodeImporter);
 
   }
 
   /**
    * Add members to site
-   * 
-   * @param place
-   *          The site
-   * @param siteInfo
-   *          The site info
+   *
+   * @param place The site
+   * @param siteInfo The site info
    * @throws URISyntaxException
    */
   protected void addMembers(Site place, SiteInfo siteInfo) throws URISyntaxException {
@@ -263,13 +277,10 @@ public class BulkImportSiteServiceImpl implements InitializingBean, BulkImportSi
 
   /**
    * Add members with a specific role
-   * 
-   * @param siteShortName
-   *          The site short name
-   * @param role
-   *          The site role
-   * @param users
-   *          A list of users
+   *
+   * @param siteShortName The site short name
+   * @param role The site role
+   * @param users A list of users
    */
   protected void addMembersWithRole(String siteShortName, String role, List<String> users) {
     for (String username : users) {
@@ -293,13 +304,12 @@ public class BulkImportSiteServiceImpl implements InitializingBean, BulkImportSi
    * Cleans the file name according to the Alfresco cm:name requirement. This
    * regex can be found in Alfresco contentModel.xml in the cm:filename
    * constraint.
-   * 
+   *
    * @param name
    * @return
    */
-
   protected String cleanNodeName(String str) {
-    char[] replace = { '\\', '/', ':', '*', '?', '"', '<', '>', '|' };
+    char[] replace = {'\\', '/', ':', '*', '?', '"', '<', '>', '|'};
     for (char c : replace) {
       str = str.replace(c, ' ');
     }
@@ -372,6 +382,8 @@ public class BulkImportSiteServiceImpl implements InitializingBean, BulkImportSi
     Assert.notNull(importPath, "you must provide the import path bulkimport.bulkimportpath in alfresco-global.properties");
     logger.info("Using import path: " + importPath);
     logger.info("Skipping empty strings: " + skipEmptyStrings);
+    logger.info("Allowing incremental import: " + allowIncremental);
+    logger.info("Replace existing: " + replaceExisting);
     Assert.notNull(siteService, "you must provide an instance of SiteService");
     Assert.notNull(nodeService, "you must provide an instance of NodeService");
     Assert.notNull(searchService, "you must provide an instance of SearchService");
@@ -382,4 +394,19 @@ public class BulkImportSiteServiceImpl implements InitializingBean, BulkImportSi
     Assert.notNull(personService, "you must provide an instance of PersonService");
     Assert.notNull(namespaceService, "you must provide an instance of NamespaceService");
   }
+
+  @Override
+  public boolean inProgress() {
+    return bulkFilesystemImporter.getStatus().inProgress();
+  }
+
+  @Override
+  public BulkImportStatus getStatus() {
+    return bulkFilesystemImporter.getStatus();
+  }
+
+  public void setAllowIncremental(boolean allowIncremental) {
+    this.allowIncremental = allowIncremental;
+  }
+
 }

@@ -1,16 +1,15 @@
 package se.redpill.alfresco.repo.bulkimportsite;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 import java.io.File;
 import java.util.List;
 import java.util.Map;
 
+import org.alfresco.error.AlfrescoRuntimeException;
 import org.alfresco.repo.bulkimport.BulkFilesystemImporter;
 import org.alfresco.repo.bulkimport.BulkImportParameters;
+import org.alfresco.repo.bulkimport.BulkImportStatus;
 import org.alfresco.repo.bulkimport.NodeImporter;
 import org.alfresco.repo.bulkimport.impl.StreamingNodeImporterFactory;
 import org.alfresco.repo.transaction.RetryingTransactionHelper;
@@ -30,7 +29,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import se.redpill.alfresco.repo.bulkimportsite.connector.ShareConnector;
+import se.redpill.alfresco.repo.bulkimportsite.connector.impl.ShareConnectorImpl;
 import se.redpill.alfresco.repo.bulkimportsite.facade.AuthenticationUtilFacade;
 import se.redpill.alfresco.repo.bulkimportsite.mock.AuthenticationUtilFacadeMock;
 import se.redpill.alfresco.repo.bulkimportsite.mock.RetryingTransactionHelperMock;
@@ -51,7 +50,7 @@ public class BulkImportSiteServiceImplTest {
 
   RetryingTransactionHelper retryingTransactionHelper = new RetryingTransactionHelperMock();
 
-  ShareConnector shareConnector;
+  ShareConnectorImpl shareConnector;
 
   SiteInfo siteInfo;
 
@@ -74,7 +73,7 @@ public class BulkImportSiteServiceImplTest {
     searchService = m.mock(SearchService.class);
     bulkFilesystemImporter = m.mock(BulkFilesystemImporter.class);
     streamingNodeImporterFactory = m.mock(StreamingNodeImporterFactory.class);
-    shareConnector = m.mock(ShareConnector.class);
+    shareConnector = m.mock(ShareConnectorImpl.class);
     siteInfo = m.mock(SiteInfo.class, "site info 1");
     personService = m.mock(PersonService.class);
     namespaceService = m.mock(NamespaceService.class);
@@ -187,6 +186,7 @@ public class BulkImportSiteServiceImplTest {
     
     assertNotNull(site);
     final NodeImporter ni = m.mock(NodeImporter.class);
+    final BulkImportStatus bis = m.mock(BulkImportStatus.class);
     m.checking(new Expectations() {
       {
         oneOf(siteInfo).getNodeRef();
@@ -198,7 +198,69 @@ public class BulkImportSiteServiceImplTest {
         oneOf(siteService).getSite(SHORT_NAME2);
         will(returnValue(null));
 
-        oneOf(shareConnector).createSite(site);
+        oneOf(shareConnector).createSite(with(any(Map.class)), with(site));
+        will(returnValue(null));
+
+        allowing(siteService).getSite(SHORT_NAME);
+        will(returnValue(siteInfo));
+
+        oneOf(shareConnector).createDocumentLibrary(with(any(Map.class)), with(SHORT_NAME));
+        will(returnValue(docLibNodeRef));
+
+        oneOf(streamingNodeImporterFactory).getNodeImporter(with(any(File.class)));
+        will(returnValue(ni));
+
+        oneOf(bulkFilesystemImporter).asyncBulkImport(with(any(BulkImportParameters.class)), with(any(NodeImporter.class)));
+        
+        oneOf(nodeService).addProperties(with(siteNodeRef), with(any(Map.class)));
+        oneOf(siteService).getContainer(SHORT_NAME, SiteService.DOCUMENT_LIBRARY);
+        will(returnValue(null));
+        oneOf(siteService).getContainer(SHORT_NAME, SiteService.DOCUMENT_LIBRARY);
+        will(returnValue(docLibNodeRef));
+        
+        oneOf(bulkFilesystemImporter).getStatus();
+        will(returnValue(bis));
+        
+        oneOf(bis).inProgress();
+        will(returnValue(false));
+        
+        oneOf(shareConnector).loginToShare();
+      }
+    });
+    bissi.importSite(site);
+
+  }
+  
+  @Test
+  public void testImportSiteInProgress() throws Exception {
+    final NodeRef siteNodeRef = new NodeRef("workspace://SpacesStore/site");
+    final NodeRef docLibNodeRef = new NodeRef("workspace://SpacesStore/docLib");
+    // List<Site> allSites = bissi.getAllSites();
+    m.checking(new Expectations() {
+      {
+        allowing(siteService).hasSite(SHORT_NAME);
+        will(returnValue(false));
+        allowing(siteService).hasSite(SHORT_NAME2);
+        will(returnValue(false));
+      }
+    });
+    final Site site = bissi.getSite(SHORT_NAME);
+    
+    assertNotNull(site);
+    final NodeImporter ni = m.mock(NodeImporter.class);
+    final BulkImportStatus bis = m.mock(BulkImportStatus.class);
+    m.checking(new Expectations() {
+      {
+        oneOf(siteInfo).getNodeRef();
+        will(returnValue(siteNodeRef));
+        allowing(siteInfo).getShortName();
+        will(returnValue(SHORT_NAME));
+        oneOf(siteService).getSite(SHORT_NAME);
+        will(returnValue(null));
+        oneOf(siteService).getSite(SHORT_NAME2);
+        will(returnValue(null));
+
+        oneOf(shareConnector).createSite(null, site);
         will(returnValue(null));
 
         allowing(siteService).getSite(SHORT_NAME);
@@ -210,15 +272,25 @@ public class BulkImportSiteServiceImplTest {
         oneOf(streamingNodeImporterFactory).getNodeImporter(with(any(File.class)));
         will(returnValue(ni));
 
-        oneOf(bulkFilesystemImporter).bulkImport(with(any(BulkImportParameters.class)), with(any(NodeImporter.class)));
+        oneOf(bulkFilesystemImporter).asyncBulkImport(with(any(BulkImportParameters.class)), with(any(NodeImporter.class)));
         
         oneOf(nodeService).addProperties(with(siteNodeRef), with(any(Map.class)));
         oneOf(siteService).getContainer(SHORT_NAME, SiteService.DOCUMENT_LIBRARY);
         will(returnValue(docLibNodeRef));
+        
+        oneOf(bulkFilesystemImporter).getStatus();
+        will(returnValue(bis));
+        
+        oneOf(bis).inProgress();
+        will(returnValue(true));
       }
     });
-    bissi.importSite(site);
-
+    try {
+      bissi.importSite(site);
+      assertTrue(false);
+    } catch (Exception e) {
+      assertTrue(e.getMessage().contains("Import already in progress"));
+    }
   }
 
   private Site getSite(List<Site> sites, String shortName) {

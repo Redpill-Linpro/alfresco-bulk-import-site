@@ -13,14 +13,14 @@
 
   <groupId>org.redpill-linpro.alfresco.bulkimport</groupId>
   <artifactId>alfresco-bulk-import-site</artifactId>
-  <version>1.0.0</version>
+  <version>1.1.0</version>
   <name>Bulk import tool for site structure</name>
   <description>Bulk import tool for site structure</description>
   <packaging>pom</packaging>
 
   <properties>
     <alfresco.groupId>org.alfresco</alfresco.groupId>
-    <alfresco.version>4.2.f</alfresco.version>
+    <alfresco.version>4.2.4</alfresco.version>
   </properties>
 
   <modules>
