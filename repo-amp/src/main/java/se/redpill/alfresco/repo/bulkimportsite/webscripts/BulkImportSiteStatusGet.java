@@ -3,7 +3,7 @@ package se.redpill.alfresco.repo.bulkimportsite.webscripts;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.alfresco.repo.bulkimport.BulkImportStatus;
+import org.alfresco.extension.bulkfilesystemimport.BulkImportStatus;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.extensions.webscripts.Cache;

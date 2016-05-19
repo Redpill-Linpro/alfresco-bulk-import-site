@@ -7,11 +7,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.alfresco.error.AlfrescoRuntimeException;
-import org.alfresco.repo.bulkimport.BulkFilesystemImporter;
-import org.alfresco.repo.bulkimport.BulkImportParameters;
-import org.alfresco.repo.bulkimport.BulkImportStatus;
-import org.alfresco.repo.bulkimport.NodeImporter;
-import org.alfresco.repo.bulkimport.impl.StreamingNodeImporterFactory;
+import org.alfresco.extension.bulkfilesystemimport.BulkFilesystemImporter;
+import org.alfresco.extension.bulkfilesystemimport.BulkImportStatus;
 import org.alfresco.repo.transaction.RetryingTransactionHelper;
 import org.alfresco.service.cmr.repository.NodeRef;
 import org.alfresco.service.cmr.repository.NodeService;
@@ -46,8 +43,6 @@ public class BulkImportSiteServiceImplTest {
 
   BulkFilesystemImporter bulkFilesystemImporter;
 
-  StreamingNodeImporterFactory streamingNodeImporterFactory;
-
   RetryingTransactionHelper retryingTransactionHelper = new RetryingTransactionHelperMock();
 
   ShareConnectorImpl shareConnector;
@@ -72,7 +67,6 @@ public class BulkImportSiteServiceImplTest {
     nodeService = m.mock(NodeService.class);
     searchService = m.mock(SearchService.class);
     bulkFilesystemImporter = m.mock(BulkFilesystemImporter.class);
-    streamingNodeImporterFactory = m.mock(StreamingNodeImporterFactory.class);
     shareConnector = m.mock(ShareConnectorImpl.class);
     siteInfo = m.mock(SiteInfo.class, "site info 1");
     personService = m.mock(PersonService.class);
@@ -87,11 +81,10 @@ public class BulkImportSiteServiceImplTest {
     bissi.setSiteService(siteService);
     bissi.setNodeService(nodeService);
     bissi.setSearchService(searchService);
-    bissi.setBulkFilesystemImporter(bulkFilesystemImporter);
-    bissi.setStreamingNodeImporterFactory(streamingNodeImporterFactory);
     bissi.setShareConnector(shareConnector);
     bissi.setPersonService(personService);
     bissi.setNamespaceService(namespaceService);
+    bissi.setBulkFilesystemImporter(bulkFilesystemImporter);
     bissi.afterPropertiesSet();
   }
 
@@ -170,7 +163,7 @@ public class BulkImportSiteServiceImplTest {
   }
 
   @Test
-  public void testImportSite() throws Exception {
+  public void testImportSite() throws Exception, Throwable {
     final NodeRef siteNodeRef = new NodeRef("workspace://SpacesStore/site");
     final NodeRef docLibNodeRef = new NodeRef("workspace://SpacesStore/docLib");
     // List<Site> allSites = bissi.getAllSites();
@@ -185,7 +178,6 @@ public class BulkImportSiteServiceImplTest {
     final Site site = bissi.getSite(SHORT_NAME);
     
     assertNotNull(site);
-    final NodeImporter ni = m.mock(NodeImporter.class);
     final BulkImportStatus bis = m.mock(BulkImportStatus.class);
     m.checking(new Expectations() {
       {
@@ -207,10 +199,7 @@ public class BulkImportSiteServiceImplTest {
         oneOf(shareConnector).createDocumentLibrary(with(any(Map.class)), with(SHORT_NAME));
         will(returnValue(docLibNodeRef));
 
-        oneOf(streamingNodeImporterFactory).getNodeImporter(with(any(File.class)));
-        will(returnValue(ni));
-
-        oneOf(bulkFilesystemImporter).asyncBulkImport(with(any(BulkImportParameters.class)), with(any(NodeImporter.class)));
+        oneOf(bulkFilesystemImporter).bulkImport(with(any(NodeRef.class)), with(any(File.class)), with(false));
         
         oneOf(nodeService).addProperties(with(siteNodeRef), with(any(Map.class)));
         oneOf(siteService).getContainer(SHORT_NAME, SiteService.DOCUMENT_LIBRARY);
@@ -232,7 +221,7 @@ public class BulkImportSiteServiceImplTest {
   }
   
   @Test
-  public void testImportSiteInProgress() throws Exception {
+  public void testImportSiteInProgress() throws Exception, Throwable {
     final NodeRef siteNodeRef = new NodeRef("workspace://SpacesStore/site");
     final NodeRef docLibNodeRef = new NodeRef("workspace://SpacesStore/docLib");
     // List<Site> allSites = bissi.getAllSites();
@@ -247,7 +236,6 @@ public class BulkImportSiteServiceImplTest {
     final Site site = bissi.getSite(SHORT_NAME);
     
     assertNotNull(site);
-    final NodeImporter ni = m.mock(NodeImporter.class);
     final BulkImportStatus bis = m.mock(BulkImportStatus.class);
     m.checking(new Expectations() {
       {
@@ -269,10 +257,7 @@ public class BulkImportSiteServiceImplTest {
         oneOf(shareConnector).createDocumentLibrary(null, SHORT_NAME);
         will(returnValue(docLibNodeRef));
 
-        oneOf(streamingNodeImporterFactory).getNodeImporter(with(any(File.class)));
-        will(returnValue(ni));
-
-        oneOf(bulkFilesystemImporter).asyncBulkImport(with(any(BulkImportParameters.class)), with(any(NodeImporter.class)));
+        oneOf(bulkFilesystemImporter).bulkImport(with(any(NodeRef.class)), with(any(File.class)), with(false));
         
         oneOf(nodeService).addProperties(with(siteNodeRef), with(any(Map.class)));
         oneOf(siteService).getContainer(SHORT_NAME, SiteService.DOCUMENT_LIBRARY);

@@ -19,11 +19,8 @@ import javax.transaction.RollbackException;
 import javax.transaction.SystemException;
 
 import org.alfresco.error.AlfrescoRuntimeException;
-import org.alfresco.repo.bulkimport.BulkFilesystemImporter;
-import org.alfresco.repo.bulkimport.BulkImportParameters;
-import org.alfresco.repo.bulkimport.BulkImportStatus;
-import org.alfresco.repo.bulkimport.NodeImporter;
-import org.alfresco.repo.bulkimport.impl.StreamingNodeImporterFactory;
+import org.alfresco.extension.bulkfilesystemimport.BulkFilesystemImporter;
+import org.alfresco.extension.bulkfilesystemimport.BulkImportStatus;
 import org.alfresco.repo.security.authentication.AuthenticationUtil.RunAsWork;
 import org.alfresco.repo.transaction.RetryingTransactionHelper;
 import org.alfresco.service.cmr.repository.NodeRef;
@@ -52,7 +49,7 @@ public class BulkImportSiteServiceImpl implements InitializingBean, BulkImportSi
   SearchService searchService;
   NodeService nodeService;
   BulkFilesystemImporter bulkFilesystemImporter;
-  StreamingNodeImporterFactory streamingNodeImporterFactory;
+  //StreamingNodeImporterFactory streamingNodeImporterFactory;
   RetryingTransactionHelper transactionHelper;
   Map<String, String> userCache = new HashMap<String, String>();
   ShareConnector shareConnector;
@@ -64,8 +61,6 @@ public class BulkImportSiteServiceImpl implements InitializingBean, BulkImportSi
   private String importPath;
   private boolean skipEmptyStrings = false;
   protected boolean replaceExisting = false;
-  protected int batchSize = 40;
-  protected int numThreads = 4;
   // for logging
   static int noOfFilesWritten = 0;
   protected boolean allowIncremental = false;
@@ -245,16 +240,9 @@ public class BulkImportSiteServiceImpl implements InitializingBean, BulkImportSi
    * @throws HeuristicRollbackException
    */
   protected void bulkImport(String documentsPath, NodeRef documentLibrary)
-          throws NotSupportedException, SystemException, SecurityException, IllegalStateException, RollbackException, HeuristicMixedException, HeuristicRollbackException {
+          throws NotSupportedException, SystemException, SecurityException, IllegalStateException, RollbackException, HeuristicMixedException, HeuristicRollbackException, Throwable {
     logger.info("Starting import for " + documentsPath + " into " + documentLibrary);
-    NodeImporter nodeImporter = streamingNodeImporterFactory.getNodeImporter(new File(documentsPath));
-    BulkImportParameters bulkImportParameters = new BulkImportParameters();
-    bulkImportParameters.setTarget(documentLibrary);
-    bulkImportParameters.setReplaceExisting(replaceExisting);
-    bulkImportParameters.setBatchSize(batchSize);
-    bulkImportParameters.setNumThreads(numThreads);
-    bulkFilesystemImporter.asyncBulkImport(bulkImportParameters, nodeImporter);
-
+    bulkFilesystemImporter.bulkImport(documentLibrary, new File(documentsPath), replaceExisting);
   }
 
   /**
@@ -340,10 +328,6 @@ public class BulkImportSiteServiceImpl implements InitializingBean, BulkImportSi
     this.transactionHelper = transactionHelper;
   }
 
-  public void setStreamingNodeImporterFactory(StreamingNodeImporterFactory streamingNodeImporterFactory) {
-    this.streamingNodeImporterFactory = streamingNodeImporterFactory;
-  }
-
   public void setShareConnector(ShareConnector shareConnector) {
     this.shareConnector = shareConnector;
   }
@@ -364,14 +348,6 @@ public class BulkImportSiteServiceImpl implements InitializingBean, BulkImportSi
     this.skipEmptyStrings = skipEmptyStrings;
   }
 
-  public void setNumThreads(int numThreads) {
-    this.numThreads = numThreads;
-  }
-
-  public void setBatchSize(int batchSize) {
-    this.batchSize = batchSize;
-  }
-
   public void setReplaceExisting(boolean replaceExisting) {
     this.replaceExisting = replaceExisting;
   }
@@ -388,7 +364,6 @@ public class BulkImportSiteServiceImpl implements InitializingBean, BulkImportSi
     Assert.notNull(nodeService, "you must provide an instance of NodeService");
     Assert.notNull(searchService, "you must provide an instance of SearchService");
     Assert.notNull(bulkFilesystemImporter, "you must provide an instance of BulkFilesystemImporter");
-    Assert.notNull(streamingNodeImporterFactory, "you must provide an instance of StreamingNodeImporterFactory");
     Assert.notNull(transactionHelper, "you must provide an instance of RetryingTransactionHelper");
     Assert.notNull(shareConnector, "you must provide an instance of ShareConnector");
     Assert.notNull(personService, "you must provide an instance of PersonService");
