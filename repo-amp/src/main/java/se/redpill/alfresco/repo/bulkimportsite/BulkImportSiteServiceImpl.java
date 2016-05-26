@@ -171,6 +171,7 @@ public class BulkImportSiteServiceImpl implements InitializingBean, BulkImportSi
         }
 
         final SiteInfo finalSiteInfo = siteInfo;
+        addMembers(place, finalSiteInfo);
         NodeRef documentLibrary = transactionHelper.doInTransaction(new RetryingTransactionHelper.RetryingTransactionCallback<NodeRef>() {
             @Override
             public NodeRef execute() throws Throwable {
@@ -183,7 +184,7 @@ public class BulkImportSiteServiceImpl implements InitializingBean, BulkImportSi
           documentLibrary = transactionHelper.doInTransaction(new RetryingTransactionHelper.RetryingTransactionCallback<NodeRef>() {
             @Override
             public NodeRef execute() throws Throwable {
-              addMembers(place, finalSiteInfo);
+              //addMembers(place, finalSiteInfo);
               nodeService.addProperties(finalSiteInfo.getNodeRef(), place.getAlfrescoProperties(namespaceService, skipEmptyStrings));
               return siteService.getContainer(finalSiteInfo.getShortName(), SiteService.DOCUMENT_LIBRARY);
             }
