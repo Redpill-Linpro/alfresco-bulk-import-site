@@ -171,13 +171,20 @@ public class BulkImportSiteServiceImpl implements InitializingBean, BulkImportSi
         }
 
         final SiteInfo finalSiteInfo = siteInfo;
-        addMembers(place, finalSiteInfo);
+        transactionHelper.doInTransaction(new RetryingTransactionHelper.RetryingTransactionCallback<Void>() {
+          @Override
+          public Void execute() throws Throwable {
+            addMembers(place, finalSiteInfo);
+            return null;
+          }
+        }, false, true);
+
         NodeRef documentLibrary = transactionHelper.doInTransaction(new RetryingTransactionHelper.RetryingTransactionCallback<NodeRef>() {
-            @Override
-            public NodeRef execute() throws Throwable {
-              return siteService.getContainer(finalSiteInfo.getShortName(), SiteService.DOCUMENT_LIBRARY);
-            }
-          }, false, true);
+          @Override
+          public NodeRef execute() throws Throwable {
+            return siteService.getContainer(finalSiteInfo.getShortName(), SiteService.DOCUMENT_LIBRARY);
+          }
+        }, false, true);
         if (documentLibrary == null) {
           // Create doclib
           shareConnector.createDocumentLibrary(cookies, siteInfo.getShortName());
