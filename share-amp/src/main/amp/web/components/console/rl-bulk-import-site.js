@@ -162,8 +162,6 @@ if (typeof RPL == "undefined" || !RPL) {
             }
           //}
         });
-        
-        this.widgets.dataTable.subscribe
 
         var selectAllCheckbox = Dom.get(this.id+'-select-all');
         YUIEvent.addListener(selectAllCheckbox, "click", this.onSelectAllChange, this);
