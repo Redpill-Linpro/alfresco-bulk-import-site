@@ -72,6 +72,9 @@ public class BulkImportSiteServiceImpl implements InitializingBean, BulkImportSi
     String[] directories = file.list(new FilenameFilter() {
       @Override
       public boolean accept(File current, String name) {
+        if(new File(current, name + ".inprogress").exists()){
+          return false;
+        }
         return new File(current, name).isDirectory();
       }
     });
