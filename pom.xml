@@ -7,20 +7,20 @@
   <parent>
     <groupId>com.redpill-linpro.alfresco</groupId>
     <artifactId>alfresco-base</artifactId>
-    <version>1.1.1.18</version>
+    <version>1.1.1.19</version>
   </parent>
 
 
   <groupId>org.redpill-linpro.alfresco.bulkimport</groupId>
   <artifactId>alfresco-bulk-import-site</artifactId>
-  <version>1.1.0</version>
+  <version>1.2.0</version>
   <name>Bulk import tool for site structure</name>
   <description>Bulk import tool for site structure</description>
   <packaging>pom</packaging>
 
   <properties>
     <alfresco.groupId>org.alfresco</alfresco.groupId>
-    <alfresco.version>4.2.4</alfresco.version>
+    <alfresco.version>4.2.e</alfresco.version>
   </properties>
 
   <modules>
@@ -28,6 +28,7 @@
     <module>share</module>-->
     <module>repo-amp</module>
     <module>share-amp</module>
+    <module>repo-3rdparty</module>
   </modules>
 
   <repositories>

@@ -6,16 +6,13 @@
     <property name="siteService" ref="SiteService" />
     <property name="nodeService" ref="NodeService" />
     <property name="searchService" ref="SearchService" />
-    <property name="bulkFilesystemImporter" ref="bulkFilesystemImporter" />
-    <property name="streamingNodeImporterFactory" ref="streamingNodeImporterFactory" />
+    <property name="bulkFilesystemImporter" ref="bfsit-multi-threaded-bulk-filesystem-importer-manualsize-threadpool" />
     <property name="transactionHelper" ref="retryingTransactionHelper" />
     <property name="importPath" value="${bulkimportsite.importPath}" />
     <property name="skipEmptyStrings" value="${bulkimportsite.skipEmptyStrings}" />
     <property name="shareConnector" ref="redpill.bulkImportSiteShareConnector" />
     <property name="personService" ref="PersonService" />
     <property name="namespaceService" ref="NamespaceService" />
-    <property name="numThreads" value="${bulkimportsite.numThreads}" />
-    <property name="batchSize" value="${bulkimportsite.batchSize}" />
     <property name="replaceExisting" value="${bulkimportsite.replaceExisting}" />
     <property name="allowIncremental" value="${bulkimportsite.allowIncremental}" />
   </bean>

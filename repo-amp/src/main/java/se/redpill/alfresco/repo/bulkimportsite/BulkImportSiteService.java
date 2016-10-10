@@ -5,7 +5,7 @@ import java.net.URISyntaxException;
 import java.util.InvalidPropertiesFormatException;
 import java.util.List;
 
-import org.alfresco.repo.bulkimport.BulkImportStatus;
+import org.alfresco.extension.bulkfilesystemimport.BulkImportStatus;
 
 import se.redpill.alfresco.repo.bulkimportsite.model.Site;
 

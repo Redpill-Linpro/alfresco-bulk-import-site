@@ -164,21 +164,19 @@ if (typeof RPL == "undefined" || !RPL) {
         });
 
         var selectAllCheckbox = Dom.get(this.id+'-select-all');
-        selectAllCheckbox.onchange = this.onSelectAllChange;
+        YUIEvent.addListener(selectAllCheckbox, "click", this.onSelectAllChange, this);
       },
 
-      onSelectAllChange: function BulkImportSite_onSelectAllChange(a, b, c) {
-        //alert("onSelectAllChange");
-
-        var checkBoxes = this.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.getElementsByClassName("yui-dt-checkbox");
+      onSelectAllChange: function BulkImportSite_onSelectAllChange(e, matchedEl, container) {
+        var checkBoxes = matchedEl.widgets.dataTable.getTbodyEl().getElementsByClassName("yui-dt-checkbox");
         for (var i=0;i<checkBoxes.length;i++) {
           var checkBox = checkBoxes[i];
+          var alreadyImported = matchedEl.widgets.dataTable.getRecord(checkBox).getData("imported");
           if ((checkBox.checked===true && this.checked===false) || 
-             (checkBox.checked===false && this.checked===true)) {
+             (checkBox.checked===false && this.checked===true && !alreadyImported)) {
             checkBox.click();
           }
         }
-        //this.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.getElementsByClassName("yui-dt-checkbox")[0].checked=false
       },
 
       onSubmitClick: function BulkImportSite_onSubmitClick()  {
